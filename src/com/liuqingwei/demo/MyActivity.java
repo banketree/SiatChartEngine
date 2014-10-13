@@ -14,11 +14,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 public class MyActivity extends Activity {
     /**
@@ -36,34 +38,18 @@ public class MyActivity extends Activity {
             StrictMode.setThreadPolicy(policy);
         }
         init();
-        try {
-            JSONObject obj = new JSONObject(result);
-            String temp = obj.get("devcode").toString();
-            Toast.makeText(this, temp,Toast.LENGTH_LONG).show();
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
+
 
     }
     private void init() {
         LinearLayout layout=(LinearLayout) findViewById(R.id.root);
         final DrawView view=new DrawView(this);
-        view.setMinimumHeight(800);
-        view.setMinimumWidth(400);
+        view.setMinimumHeight(400);
+        view.setMinimumWidth(500);
+
         //通知view组件重绘
         view.invalidate();
         layout.addView(view);
-        try {
-            PostRequest request = new PostRequest();
-            result = request.getJsonResponse();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
     }
 
 }

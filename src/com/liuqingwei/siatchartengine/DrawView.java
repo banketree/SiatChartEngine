@@ -3,6 +3,9 @@ package com.liuqingwei.siatchartengine;
 import android.content.Context;
 import android.graphics.*;
 import android.view.View;
+import com.liuqingwei.util.PostRequest;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Created by Meteoral on 14-10-10.
@@ -10,21 +13,81 @@ import android.view.View;
 
 public class DrawView extends View {
 
+    private int width;
+    private int height;
+    private PostRequest request;
     public DrawView(Context context) {
         super(context);
     }
-
+    public DrawView(Context context,Renderer renderer) {
+        super(context);
+    }
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        /*
-         * 方法 说明 drawRect 绘制矩形 drawCircle 绘制圆形 drawOval 绘制椭圆 drawPath 绘制任意多边形
-         * drawLine 绘制直线 drawPoin 绘制点
-         */
-        // 创建画笔
-        Paint p = new Paint();
-        p.setColor(Color.RED);// 设置红色
+        Canvas lineCanvas = new Canvas();
 
+        // 创建画笔
+        /** 创建背景色画笔 */
+        Paint background = new Paint();
+        background.setColor(0xFFF0F0F0);//设置心率图灰色背景
+
+        Paint backP = new Paint();
+        backP.setColor(Color.RED);
+        backP.setAlpha(100);
+        Paint p = new Paint();
+        width = getMeasuredWidth();
+        height = getMeasuredHeight();
+        canvas.drawRect(0,0,width,height,background);
+        /** 横纵grid的步距 */
+        final int gridStep = 10;
+        /** 绘制竖向的红色grid */
+        for(int k=0;k<width/gridStep;k++)
+        {
+            if(k%5==0) {//每隔5个格子粗体显示
+                backP.setStrokeWidth(2);
+                canvas.drawLine(k * gridStep, 0, k * gridStep, height, backP);
+            }
+            else
+            {
+                backP.setStrokeWidth(1);
+                canvas.drawLine(k * gridStep, 0, k * gridStep, height, backP);
+            }
+        }
+        /** 绘制横向的红色grid */
+        for(int g=0;g<height/gridStep;g++)
+        {
+            if(g%5==0) {
+                backP.setStrokeWidth(2);
+                canvas.drawLine(0,g*gridStep, width,g*gridStep, backP);
+            }
+            else
+            {
+                backP.setStrokeWidth(1);
+                canvas.drawLine(0,g*gridStep, width,g*gridStep, backP);
+            }
+        }
+
+        final int halfHeight = height/2;
+        p.setColor(Color.BLACK);
+        p.setStrokeWidth(3);
+        try {
+            request = new PostRequest();
+            String result = request.getJsonResponse();
+            JSONObject obj = new JSONObject(result);
+            JSONArray data = obj.getJSONArray("data");//得到的心电图数据
+            final int step = 1;//步进值，默认为1，值越大步进越多，绘制越快，精度越低
+            final int counts = (data.length()/width)*step;//每个横向像素点所需步进的纵向值
+            for(int i=0;i<width/step;i++)
+            {
+                canvas.drawLine(i*step, (-data.getInt(i*counts)*0.5f)+halfHeight, (i+1)*step, (-data.getInt((i+1)*counts)*0.5f)+halfHeight, p);
+            }
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        /*
         canvas.drawText("画圆：", 10, 20, p);// 画文本
         canvas.drawCircle(60, 20, 10, p);// 小圆
         p.setAntiAlias(true);// 设置画笔的锯齿效果。 true是去除，大家一看效果就明白了
@@ -51,6 +114,7 @@ public class DrawView extends View {
 
         canvas.drawText("画扇形和椭圆:", 10, 120, p);
         /* 设置渐变色 这个正方形的颜色是改变的 */
+        /*
         Shader mShader = new LinearGradient(0, 0, 100, 100,
                 new int[] { Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW,
                         Color.LTGRAY }, null, Shader.TileMode.REPEAT); // 一个材质,打造出一个线性梯度沿著一条线。
@@ -92,6 +156,7 @@ public class DrawView extends View {
          */
 
         //画圆角矩形
+        /*
         p.setStyle(Paint.Style.FILL);//充满
         p.setColor(Color.LTGRAY);
         p.setAntiAlias(true);// 设置画笔的锯齿效果
@@ -118,5 +183,6 @@ public class DrawView extends View {
         //画图片，就是贴图
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
         canvas.drawBitmap(bitmap, 250,360, p);
+        */
     }
 }
