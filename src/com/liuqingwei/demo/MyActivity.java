@@ -4,23 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 import com.liuqingwei.siatchartengine.DrawView;
 import com.liuqingwei.siatchartengine.R;
-import com.liuqingwei.util.PostRequest;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.protocol.HTTP;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
+import com.liuqingwei.siatchartengine.Renderer;
 
 public class MyActivity extends Activity {
     /**
@@ -43,7 +29,11 @@ public class MyActivity extends Activity {
     }
     private void init() {
         LinearLayout layout=(LinearLayout) findViewById(R.id.root);
-        final DrawView view=new DrawView(this);
+        Renderer renderer = new Renderer();
+        renderer.setSiatShowLabel(true);
+        renderer.setSiatChartLabel("这是测试的心电图");
+        renderer.setSiatLineStep(1);
+        final DrawView view=new DrawView(this,renderer);
         view.setMinimumHeight(400);
         view.setMinimumWidth(500);
 

@@ -11,16 +11,21 @@ import org.json.JSONObject;
  * Created by Meteoral on 14-10-10.
  */
 
-public class DrawView extends View {
+public class DrawView extends View{
 
     private int width;
     private int height;
     private PostRequest request;
+    private Renderer render;
+    private boolean isDrawn = false;
+    private Rect rect;
     public DrawView(Context context) {
         super(context);
+        render = new Renderer();
     }
     public DrawView(Context context,Renderer renderer) {
         super(context);
+        render = renderer;
     }
     @Override
     protected void onDraw(Canvas canvas) {
@@ -30,17 +35,20 @@ public class DrawView extends View {
         // 创建画笔
         /** 创建背景色画笔 */
         Paint background = new Paint();
-        background.setColor(0xFFF0F0F0);//设置心率图灰色背景
+        background.setColor(render.BACKGROUND_COLOR);//设置心率图灰色背景
 
         Paint backP = new Paint();
-        backP.setColor(Color.RED);
+        backP.setColor(render.getSiatAxesColor());
         backP.setAlpha(100);
         Paint p = new Paint();
         width = getMeasuredWidth();
         height = getMeasuredHeight();
         canvas.drawRect(0,0,width,height,background);
-        /** 横纵grid的步距 */
-        final int gridStep = 10;
+        /** 心电图每小格40ms
+         *  6000/40 = 屏幕横向共150个小格
+         *  150个小格平均分布在width宽上
+         *  横纵grid的步距 */
+        final int gridStep = width/150;
         /** 绘制竖向的红色grid */
         for(int k=0;k<width/gridStep;k++)
         {
@@ -67,7 +75,8 @@ public class DrawView extends View {
                 canvas.drawLine(0,g*gridStep, width,g*gridStep, backP);
             }
         }
-
+        rect = canvas.getClipBounds();
+        canvas.saveLayerAlpha(new RectF(rect),0xFF,Canvas.MATRIX_SAVE_FLAG);
         final int halfHeight = height/2;
         p.setColor(Color.BLACK);
         p.setStrokeWidth(3);
@@ -76,7 +85,7 @@ public class DrawView extends View {
             String result = request.getJsonResponse();
             JSONObject obj = new JSONObject(result);
             JSONArray data = obj.getJSONArray("data");//得到的心电图数据
-            final int step = 1;//步进值，默认为1，值越大步进越多，绘制越快，精度越低
+            final int step = render.getSiatLineStep();//步进值，默认为3，值越大步进越多，绘制越快，精度越低
             final int counts = (data.length()/width)*step;//每个横向像素点所需步进的纵向值
             for(int i=0;i<width/step;i++)
             {
@@ -86,6 +95,14 @@ public class DrawView extends View {
         catch(Exception e)
         {
             e.printStackTrace();
+        }
+        if(render.isSiatShowLabel()) {
+            Paint pa = new Paint();
+            pa.setColor(render.TEXT_COLOR);
+            pa.setTypeface(render.getSiatTextTypeface());
+            pa.setTextSize(render.getSiatChartTextSize());
+            pa.setTextAlign(Paint.Align.CENTER);
+            canvas.drawText(render.getSiatChartLabel(), width/2, height-10, pa);
         }
         /*
         canvas.drawText("画圆：", 10, 20, p);// 画文本
@@ -185,4 +202,5 @@ public class DrawView extends View {
         canvas.drawBitmap(bitmap, 250,360, p);
         */
     }
+
 }
