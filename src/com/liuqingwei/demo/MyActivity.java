@@ -2,7 +2,6 @@ package com.liuqingwei.demo;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.widget.LinearLayout;
 import com.liuqingwei.siatchartengine.DrawView;
 import com.liuqingwei.siatchartengine.R;
@@ -19,10 +18,6 @@ public class MyActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
         init();
 
 
@@ -32,7 +27,10 @@ public class MyActivity extends Activity {
         Renderer renderer = new Renderer();
         renderer.setSiatShowLabel(true);
         renderer.setSiatChartLabel("这是测试的心电图");
-        renderer.setSiatLineStep(1);
+        renderer.setSiatLineStep(3);
+        renderer.setSiatScrollable(true);
+        renderer.getSiatBackgroundColor();
+
         final DrawView view=new DrawView(this,renderer);
         view.setMinimumHeight(400);
         view.setMinimumWidth(500);
