@@ -12,7 +12,7 @@ SiatChartEngine 是中科院深圳先进院科研处开发工程师Meteoral开�
 
 ## 演示Android包
 Eclipse演示程序下载
-![image](https://github.com/Meteoral/SiatChartEngine/raw/master/images/SiatChartEngine.zip "演示包下载")
+![演示包下载](https://github.com/Meteoral/SiatChartEngine/raw/master/images/SiatChartEngine.zip)
 ## 联系我
 Meteoral: mail@liuqingwei.com
 QQ: 120599662
