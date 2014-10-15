@@ -2,6 +2,7 @@ package com.liuqingwei.siatchartengine;
 
 import android.content.Context;
 import android.graphics.*;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -63,6 +64,8 @@ public class DrawView extends View{
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        long startNano = System.nanoTime();
+        long start = System.currentTimeMillis();
         DrawBackgroud(canvas);
         if(drawData==null) {
             getDrawData(GET_THIS_PAGE);
@@ -73,15 +76,18 @@ public class DrawView extends View{
         else{
             Toast.makeText(con, "没有数据", Toast.LENGTH_SHORT).show();
         }
+        long end = System.currentTimeMillis();
+        long endNano = System.nanoTime();
+        System.out.println("绘制时间："+(endNano-startNano)+"纳秒("+(end-start)+"毫秒)");
     }
 
     /**
      * 绘制心率图的背景
-     * @param canvas
+     * @param canvas 画布
      */
     public void DrawBackgroud(Canvas canvas)
     {
-        /** 创建背景色画笔 */
+        /* 创建背景色画笔 */
         Paint background = new Paint();
         background.setColor(render.BACKGROUND_COLOR);//设置心率图灰色背景
         Paint backP = new Paint();
@@ -91,14 +97,14 @@ public class DrawView extends View{
         height = getMeasuredHeight();
         rect = canvas.getClipBounds();
         canvas.drawRect(0, 0, width, height, background);
-        /** 是否绘制横纵轴 */
+        /* 是否绘制横纵轴 */
         if(render.isSiatShowAxes()) {
-            /** 心电图每小格40ms
+            /* 心电图每小格40ms
              *  6000/40 = 屏幕横向共150个小格
              *  150个小格平均分布在width宽上
              *  横纵grid的步距 */
             final int gridStep = width / 150;
-            /** 绘制竖向的红色grid */
+            /* 绘制竖向的红色grid */
             for (int k = 0; k < width / gridStep; k++) {
                 if (k % 5 == 0) {//每隔5个格子粗体显示
                     backP.setStrokeWidth(2);
@@ -108,7 +114,7 @@ public class DrawView extends View{
                     canvas.drawLine(k * gridStep, 0, k * gridStep, height, backP);
                 }
             }
-            /** 绘制横向的红色grid */
+            /* 绘制横向的红色grid */
             for (int g = 0; g < height / gridStep; g++) {
                 if (g % 5 == 0) {
                     backP.setStrokeWidth(2);
@@ -119,7 +125,7 @@ public class DrawView extends View{
                 }
             }
         }
-        /** 是否绘制Label标签 */
+        /* 是否绘制Label标签 */
         if (render.isSiatShowLabel()) {
             Paint labelPaint = new Paint();
             labelPaint.setColor(render.TEXT_COLOR);
@@ -130,6 +136,10 @@ public class DrawView extends View{
         }
     }
 
+    /**
+     * 绘制曲线
+     * @param canvas 画布
+     */
     public void DrawChart(Canvas canvas)
     {
             Paint p = new Paint();
@@ -138,6 +148,12 @@ public class DrawView extends View{
             p.setStrokeWidth(3);
             canvas.drawLines(drawData,p);
     }
+
+    /**
+     * 发送请求得到Json类型的数据
+     * @param dataType 获取方式(本页、上一页、下一页)
+     * @return true有数据，false无数据
+     */
     public boolean getDrawData(int dataType)
     {
         try {

@@ -112,7 +112,7 @@ public class Renderer implements Serializable{
 
     /**
      * 设置表格FaceStyle
-     * @param siatTextTypefaceStyle
+     * @param siatTextTypefaceStyle Facestyle属性
      */
     public void setSiatTextTypefaceStyle(int siatTextTypefaceStyle) {
         this.siatTextTypefaceStyle = siatTextTypefaceStyle;
@@ -160,7 +160,7 @@ public class Renderer implements Serializable{
 
     /**
      * 设置字体的Typeface
-     * @param siatTextTypeface
+     * @param siatTextTypeface 字体Typeface
      */
     public void setSiatTextTypeface(Typeface siatTextTypeface) {
         this.siatTextTypeface = siatTextTypeface;

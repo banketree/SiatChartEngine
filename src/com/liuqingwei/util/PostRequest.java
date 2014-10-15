@@ -22,9 +22,13 @@ import java.io.UnsupportedEncodingException;
  */
 public class PostRequest {
 
+    /** 待发送的URL值(不含参数) */
     private String _url;
+    /** 待发送的HTTPClient */
     private DefaultHttpClient _client;
+    /** 待发送事件EventId */
     private String _eventId;
+    /** 待发送获取的页数 */
     private Integer _page;
 
     /**
@@ -145,7 +149,7 @@ public class PostRequest {
     /**
      * 发送请求，获取当前页Json格式数据
      * @return Json格式的字符串
-     * @throws Exception
+     * @throws Exception 获取错误
      */
     public String getJsonResponse() throws Exception{
         String urlParm = "?type="+_page+"&EventId="+_eventId;
@@ -155,7 +159,7 @@ public class PostRequest {
     /**
      * 发送请求，获取上一页Json格式数据
      * @return Json格式的字符串
-     * @throws Exception
+     * @throws Exception 获取错误
      */
     public String getAutoNextJsonResponse() throws Exception{
         _page++;
@@ -165,7 +169,7 @@ public class PostRequest {
     /**
      * 发送请求，获取下一页Json格式数据
      * @return Json格式的字符串
-     * @throws Exception
+     * @throws Exception 获取错误
      */
     public String getAutoPreJsonResponse() throws Exception{
         _page--;
@@ -179,7 +183,7 @@ public class PostRequest {
      * @param url 已经格式化好带有参数的URL
      * @param client 模拟请求的客户端配置
      * @return 发出请求后得到的结果
-     * @throws Exception
+     * @throws Exception 获取错误
      */
     private String requests(String url,DefaultHttpClient client) throws Exception {
         if (android.os.Build.VERSION.SDK_INT > 9) {
@@ -206,7 +210,7 @@ public class PostRequest {
     /**
      * 处理提交的信息
      * @param httpEntity
-     * @return
+     * @return 获取的数据信息
      */
     private String retrieveInputStream(HttpEntity httpEntity) {
 

@@ -27,7 +27,7 @@ public class MyActivity extends Activity {
         Renderer renderer = new Renderer();
         renderer.setSiatShowLabel(true);
         renderer.setSiatChartLabel("这是测试的心电图");
-        renderer.setSiatLineStep(3);
+        renderer.setSiatLineStep(1);
         renderer.setSiatScrollable(true);
         renderer.getSiatBackgroundColor();
 
