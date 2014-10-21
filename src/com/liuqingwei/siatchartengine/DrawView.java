@@ -2,13 +2,22 @@ package com.liuqingwei.siatchartengine;
 
 import android.content.Context;
 import android.graphics.*;
-import android.util.Log;
+import android.os.AsyncTask;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
-import com.liuqingwei.util.PostRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * 图像绘制类
@@ -30,8 +39,6 @@ public class DrawView extends View{
     private int width;
     /** 控件的高 */
     private int height;
-    /** 发送到服务器的请求 */
-    private PostRequest request;
     /** 渲染配置器 */
     private Renderer render;
     /** 控件的Rect */
@@ -44,6 +51,12 @@ public class DrawView extends View{
     private float[] drawData;
     /** 数据集中是否存在数据 */
     private boolean hasData;
+    /** 待发送的URL值(不含参数) */
+    private String _url = "http://www.bit-health.com/ecg/drawEcg.php";
+    /** 待发送事件EventId */
+    private String _eventId = "53b64a8611dbae4910000003";
+    /** 待发送获取的页数 */
+    private Integer _page = 0;
 
     public DrawView(Context context) {
         super(context);
@@ -55,17 +68,54 @@ public class DrawView extends View{
         con = context;
         render = renderer;
     }
-    public DrawView(Context context,Renderer renderer,PostRequest re) {
-        super(context);
-        con = context;
-        render = renderer;
-        request = re;
+    /**
+     * 获取请求的url地址
+     * @return 返回url地址
+     */
+    public String getUrl() {
+        return _url;
+    }
+
+    /**
+     * 获取请求的EventId
+     * @return 返回EventId
+     */
+    public String getEventId() {
+        return _eventId;
+    }
+
+    /**
+     * 获取请求的页数
+     * @return 返回页数
+     */
+    public Integer getPage() {
+        return _page;
+    }
+    /**
+     * 设置请求的EventID
+     * @param _eventId 请求的EventId
+     */
+    public void setEventId(String _eventId) {
+        this._eventId = _eventId;
+    }
+
+    /**
+     * 设置请求页数
+     * @param _page 请求页数
+     */
+    public void setPage(Integer _page) {
+        this._page = _page;
+    }
+    /**
+     * 设置请求url地址（不含参数）
+     * @param _url 请求的url地址
+     */
+    public void setUrl(String _url) {
+        this._url = _url;
     }
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        long startNano = System.nanoTime();
-        long start = System.currentTimeMillis();
         DrawBackgroud(canvas);
         if(drawData==null) {
             getDrawData(GET_THIS_PAGE);
@@ -73,12 +123,6 @@ public class DrawView extends View{
         if(hasData) {
             DrawChart(canvas);
         }
-        else{
-            Toast.makeText(con, "没有数据", Toast.LENGTH_SHORT).show();
-        }
-        long end = System.currentTimeMillis();
-        long endNano = System.nanoTime();
-        System.out.println("绘制时间："+(endNano-startNano)+"纳秒("+(end-start)+"毫秒)");
     }
 
     /**
@@ -156,51 +200,24 @@ public class DrawView extends View{
      */
     public boolean getDrawData(int dataType)
     {
-        try {
-            if(request==null) {
-                request = new PostRequest();
-            }
-            String result;
             switch (dataType)
             {
                 case GET_THIS_PAGE:{
-                    result = request.getJsonResponse();
+                    new PostRequest().execute(GET_THIS_PAGE);
                 }
                 break;
                 case GET_PRE_PAGE:{
-                    result = request.getAutoPreJsonResponse();
+                    new PostRequest().execute(GET_PRE_PAGE);
                 }
                 break;
                 case GET_NEXT_PAGE:{
-                    result = request.getAutoNextJsonResponse();
+                    new PostRequest().execute(GET_NEXT_PAGE);
                 }
                 break;
                 default:
-                    result = request.getJsonResponse();
+                    new PostRequest().execute(GET_THIS_PAGE);
             }
-            JSONObject obj = new JSONObject(result);
-            if(0==obj.getInt("flag")||1==obj.getInt("flag"))//得到的回复中含有数据
-            {
-                JSONArray data = obj.getJSONArray("data");//得到的心电图数据
-                hasData = true;
-                int step = render.getSiatLineStep();//步进值，默认为3，值越大步进越多，绘制越快，精度越低
-                final int counts = (data.length() / width) * step;//每个横向像素点所需步进的纵向值
-                final int halfHeight = height / 2;
-                drawData = new float[(width/step)*4];
-                for (int i = 0; i < width / step; i++) {
-                    drawData[i*4] = i*step;
-                    drawData[i*4+1] = (-data.getInt(i * counts) * 0.5f) + halfHeight;
-                    drawData[i*4+2] = (i+1)*step;
-                    drawData[i*4+3] = (-data.getInt((i+1) * counts) * 0.5f) + halfHeight;
-                }
-            }
-            else if(2==obj.getInt("flag"))//没有数据了
-            {
-                hasData = false;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
         return hasData;
     }
 
@@ -216,26 +233,109 @@ public class DrawView extends View{
                     if (eventX - event.getX() > width / 4) {
                         getDrawData(GET_PRE_PAGE);
                         if (hasData) {
-                            postInvalidate();
                             Toast.makeText(con, "上一页", Toast.LENGTH_SHORT).show();
                         } else {
-                            request.setPage(request.getPage() + 1);
-                            Toast.makeText(con, "没有数据", Toast.LENGTH_SHORT).show();
+                            setPage(getPage() + 1);
                         }
                     } else if (event.getX() - eventX > width / 4) {
                         getDrawData(GET_NEXT_PAGE);
                         if (hasData) {
-                            postInvalidate();
                             Toast.makeText(con, "下一页", Toast.LENGTH_SHORT).show();
                         } else {
-                            request.setPage(request.getPage() - 1);
-                            Toast.makeText(con, "最后一页", Toast.LENGTH_SHORT).show();
+                            setPage(getPage() - 1);
                         }
                     }
                     break;
             }
         }
         return true;
+    }
+
+    class PostRequest extends AsyncTask<Integer, String, String> {
+
+        /**
+         * 无参数构造发送请求函数
+         * 默认构造url为http://www.bit-health.com/ecg/drawEcg.php
+         * 默认起始页第0页
+         */
+        public PostRequest(){
+        }
+
+        public PostRequest(String url,String eventId,Integer page)
+        {
+            _eventId = eventId;
+            _page = page;
+            _url = url;
+        }
+
+        @Override
+        protected String doInBackground(Integer... type) {
+            String responseString = "";
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpResponse response;
+            try {
+                String urlParm = null;
+                if(type[0]==GET_THIS_PAGE) {
+                    urlParm = "?type="+_page+"&EventId="+_eventId;
+                }
+                else if(type[0]==GET_NEXT_PAGE) {
+                    _page++;
+                    urlParm = "?type="+_page+"&EventId="+_eventId;
+                }
+                else if(type[0]==GET_PRE_PAGE) {
+                    _page--;
+                    if(_page<0) _page=0;//页数不能小于0
+                    urlParm = "?type="+_page+"&EventId="+_eventId;
+                }
+                response = httpclient.execute(new HttpGet(getUrl()+urlParm));
+                StatusLine statusLine = response.getStatusLine();
+                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    response.getEntity().writeTo(out);
+                    out.close();
+                    responseString = out.toString();
+                } else{
+                    //Closes the connection.
+                    response.getEntity().getContent().close();
+                    throw new IOException(statusLine.getReasonPhrase());
+                }
+            } catch (ClientProtocolException e) {
+                //TODO Handle problems..
+            } catch (IOException e) {
+                //TODO Handle problems..
+            }
+            return responseString;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            try {
+                JSONObject obj = new JSONObject(result);
+                if (0 == obj.getInt("flag") || 1 == obj.getInt("flag"))//得到的回复中含有数据
+                {
+                    JSONArray data = obj.getJSONArray("data");//得到的心电图数据
+                    hasData = true;
+                    int step = render.getSiatLineStep();//步进值，默认为3，值越大步进越多，绘制越快，精度越低
+                    final int counts = (data.length() / width) * step;//每个横向像素点所需步进的纵向值
+                    final int halfHeight = height / 2;
+                    drawData = new float[(width / step) * 4];
+                    for (int i = 0; i < width / step; i++) {
+                        drawData[i * 4] = i * step;
+                        drawData[i * 4 + 1] = (-data.getInt(i * counts) * 0.5f) + halfHeight;
+                        drawData[i * 4 + 2] = (i + 1) * step;
+                        drawData[i * 4 + 3] = (-data.getInt((i + 1) * counts) * 0.5f) + halfHeight;
+                    }
+                } else if (2 == obj.getInt("flag"))//没有数据了
+                {
+                    hasData = false;
+                }
+            }catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+            invalidate();
+        }
     }
 
 }

@@ -12,8 +12,6 @@ public class MyActivity extends Activity {
      * Called when the activity is first created.
      */
 
-    int statusCode = 0;
-    String result;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,7 +29,8 @@ public class MyActivity extends Activity {
         renderer.setSiatScrollable(true);
         renderer.getSiatBackgroundColor();
 
-        final DrawView view=new DrawView(this,renderer);
+
+        DrawView view=new DrawView(this,renderer);
         view.setMinimumHeight(400);
         view.setMinimumWidth(500);
 
